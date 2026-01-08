@@ -1,18 +1,23 @@
 # Linux build based on Oracle Linux 9
-FROM oraclelinux:9
+FROM --platform=linux/amd64 oraclelinux:9
 
 # Install build tools
 RUN dnf install -y \
     gcc-toolset-13 \
     gcc-toolset-13-gcc-c++ \
     cmake \
-    ninja-build \
+    make \
     git \
+    tar \
+    gzip \
     && dnf clean all
 
 # Enable GCC 13 by default
-ENV PATH=/opt/rh/gcc-toolset-13/root/usr/bin:$PATH
-ENV LD_LIBRARY_PATH=/opt/rh/gcc-toolset-13/root/usr/lib64:$LD_LIBRARY_PATH
+SHELL ["/usr/bin/scl", "enable", "gcc-toolset-13"]
+ENV PATH=/opt/rh/gcc-toolset-13/root/usr/bin:$PATH \
+    LD_LIBRARY_PATH=/opt/rh/gcc-toolset-13/root/usr/lib64:$LD_LIBRARY_PATH \
+    CC=/opt/rh/gcc-toolset-13/root/usr/bin/gcc \
+    CXX=/opt/rh/gcc-toolset-13/root/usr/bin/g++
 
 WORKDIR /build
 
@@ -21,11 +26,8 @@ COPY . /build/
 
 # Build
 RUN mkdir -p build && cd build && \
-    cmake -G Ninja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_CXX_STANDARD=23 \
-    .. && \
-    ninja
+    cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j$(nproc)
 
 # Create release package
 RUN mkdir -p /output && \

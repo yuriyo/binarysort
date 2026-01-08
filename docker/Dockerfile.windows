@@ -1,17 +1,23 @@
 # Windows AMD64 build using MinGW-w64 on Linux
-FROM ubuntu:22.04
+FROM --platform=linux/amd64 ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install cross-compilation tools
+# Install cross-compilation tools and newer CMake
 RUN apt-get update && apt-get install -y \
-    cmake \
+    wget \
     ninja-build \
     mingw-w64 \
     g++-mingw-w64-x86-64 \
+    gcc-mingw-w64-x86-64 \
     git \
     zip \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && wget -q https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-linux-x86_64.tar.gz \
+    && tar xzf cmake-3.28.1-linux-x86_64.tar.gz -C /usr/local --strip-components=1 \
+    && rm cmake-3.28.1-linux-x86_64.tar.gz \
+    && update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix \
+    && update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
 
 WORKDIR /build
 
@@ -22,7 +28,6 @@ COPY . /build/
 RUN mkdir -p build && cd build && \
     cmake -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_CXX_STANDARD=23 \
     -DCMAKE_SYSTEM_NAME=Windows \
     -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
     -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
