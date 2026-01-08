@@ -171,7 +171,7 @@ Test coverage includes:
 
 ## License
 
-See design document for project details and specifications.
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## References
 
