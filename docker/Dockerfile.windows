@@ -1,0 +1,44 @@
+# Windows AMD64 build using MinGW-w64 on Linux
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install cross-compilation tools
+RUN apt-get update && apt-get install -y \
+    cmake \
+    ninja-build \
+    mingw-w64 \
+    g++-mingw-w64-x86-64 \
+    git \
+    zip \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# Copy source
+COPY . /build/
+
+# Build for Windows
+RUN mkdir -p build && cd build && \
+    cmake -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_STANDARD=23 \
+    -DCMAKE_SYSTEM_NAME=Windows \
+    -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+    -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+    -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres \
+    -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32 \
+    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+    .. && \
+    ninja
+
+# Create release package
+RUN mkdir -p /output && \
+    cp build/binsort.exe /output/ && \
+    cp README.md LICENSE /output/ && \
+    cd /output && \
+    zip -r binsort-windows-amd64.zip *
+
+CMD ["cp", "-r", "/output/.", "/artifacts/"]

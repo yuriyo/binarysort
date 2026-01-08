@@ -141,6 +141,57 @@ The comparison generator creates optimized x64 assembly for record comparison:
 - No shared mutable state during parallel phase
 - Synchronization only during merge phase
 
+## Building from Source
+
+### Native Build
+
+```bash
+mkdir build && cd build
+cmake ..
+make
+```
+
+### Docker Multi-Platform Builds
+
+Build for Linux and Windows using Docker:
+
+```bash
+# Build all platforms
+./dockerbuild.sh all
+
+# Build specific platform
+./dockerbuild.sh linux
+./dockerbuild.sh windows
+```
+
+Build artifacts are placed in the `release/` directory.
+
+For macOS builds, use native CMake (Docker not supported):
+```bash
+# ARM64 (Apple Silicon)
+cmake -DCMAKE_OSX_ARCHITECTURES=arm64 ..
+
+# x86_64 (Intel)
+cmake -DCMAKE_OSX_ARCHITECTURES=x86_64 ..
+```
+
+See [docker/README.md](docker/README.md) for detailed build instructions.
+
+## Releases
+
+Automated builds are triggered by creating release tags:
+
+```bash
+git tag r1.0.0
+git push origin r1.0.0
+```
+
+This creates a GitHub release with binaries for:
+- Linux x86_64 (Oracle Linux 9)
+- Windows AMD64 (MinGW-w64)
+- macOS ARM64 (Apple Silicon)
+- macOS x86_64 (Intel)
+
 ## Testing
 
 Run the test suite:

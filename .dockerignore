@@ -1,0 +1,5 @@
+*.bin
+test_*
+build/
+release/
+.DS_Store

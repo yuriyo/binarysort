@@ -2,6 +2,9 @@
 build/
 cmake-build-*/
 
+# Release artifacts
+release/
+
 # Binary test files
 *.bin
 
