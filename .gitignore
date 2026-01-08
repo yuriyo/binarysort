@@ -5,6 +5,11 @@ cmake-build-*/
 # Release artifacts
 release/
 
+# macOS SDK (cannot be redistributed)
+docker/sdk/*.tar.xz
+docker/sdk/*.pkg
+docker/sdk/*.dmg
+
 # Binary test files
 *.bin
 

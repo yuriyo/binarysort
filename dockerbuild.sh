@@ -49,6 +49,8 @@ PLATFORMS=()
 if [ $# -eq 0 ]; then
     # Build all platforms by default
     PLATFORMS=("linux" "windows")
+    echo_warn "Skipping macOS cross-compilation (requires SDK setup)"
+    echo_warn "Use 'dockerbuild.sh macos' to attempt macOS build"
 else
     PLATFORMS=("$@")
 fi
@@ -63,13 +65,23 @@ for platform in "${PLATFORMS[@]}"; do
             build_platform "linux" "Dockerfile.linux"
             ;;
         windows)
-            build_platform "windows" "Dockerfile.windows"
+        macos)
+            if [ ! -d "$PROJECT_ROOT/docker/sdk" ] || [ -z "$(ls -A $PROJECT_ROOT/docker/sdk/*.tar.xz 2>/dev/null)" ]; then
+                echo_error "macOS SDK not found in docker/sdk/"
+                echo_info "Download MacOSX SDK from: https://github.com/joseluisq/macosx-sdks"
+                echo_info "Place MacOSX*.sdk.tar.xz in docker/sdk/ directory"
+                exit 1
+            fi
+            build_platform "macos" "Dockerfile.macos-cross"
             ;;
         all)
             build_platform "linux" "Dockerfile.linux"
             build_platform "windows" "Dockerfile.windows"
+            echo_warn "Skipping macOS (use 'dockerbuild.sh macos' separately)"
             ;;
         *)
+            echo_error "Unknown platform: $platform"
+            echo_info "Available platforms: linux, windows, maco
             echo_error "Unknown platform: $platform"
             echo_info "Available platforms: linux, windows, all"
             exit 1

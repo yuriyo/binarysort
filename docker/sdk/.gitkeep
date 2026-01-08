@@ -1,0 +1,3 @@
+# Place macOS SDK here for cross-compilation
+# Download from: https://github.com/joseluisq/macosx-sdks
+# Example: MacOSX14.0.sdk.tar.xz

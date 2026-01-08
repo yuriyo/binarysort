@@ -30,11 +30,17 @@ if "%PLATFORM%"=="windows" (
 if "%PLATFORM%"=="all" (
     call :build_linux
     call :build_windows
+    echo [WARN] Skipping macOS (use 'dockerbuild.bat macos' separately)
+    goto :done
+)
+
+if "%PLATFORM%"=="macos" (
+    call :build_macos
     goto :done
 )
 
 echo [ERROR] Unknown platform: %PLATFORM%
-echo [INFO] Available platforms: linux, windows, all
+echo [INFO] Available platforms: linux, windows, macos, all
 exit /b 1
 
 :build_linux
@@ -50,6 +56,20 @@ echo [INFO] Building for Windows...
 docker build -f "%PROJECT_ROOT%docker\Dockerfile.windows" -t binsort-builder:windows "%PROJECT_ROOT%"
 docker run --rm -v "%OUTPUT_DIR%:/artifacts" binsort-builder:windows
 echo [INFO] Windows build complete
+echo.
+exit /b 0
+
+:build_macos
+if not exist "%PROJECT_ROOT%docker\sdk" (
+    echo [ERROR] macOS SDK not found in docker\sdk\
+    echo [INFO] Download MacOSX SDK from: https://github.com/joseluisq/macosx-sdks
+    echo [INFO] Place MacOSX*.sdk.tar.xz in docker\sdk\ directory
+    exit /b 1
+)
+echo [INFO] Building for macOS (cross-compile)...
+docker build -f "%PROJECT_ROOT%docker\Dockerfile.macos-cross" -t binsort-builder:macos "%PROJECT_ROOT%"
+docker run --rm -v "%OUTPUT_DIR%:/artifacts" binsort-builder:macos
+echo [INFO] macOS build complete
 echo.
 exit /b 0
 

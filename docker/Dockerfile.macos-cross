@@ -1,0 +1,87 @@
+# macOS cross-compilation using OSXCross
+# Note: This requires macOS SDK which must be provided separately
+# See: https://github.com/tpoechtrager/osxcross
+
+FROM --platform=linux/amd64 ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    cmake \
+    make \
+    clang \
+    git \
+    wget \
+    curl \
+    libxml2-dev \
+    libssl-dev \
+    libbz2-dev \
+    zlib1g-dev \
+    patch \
+    python3 \
+    xz-utils \
+    cpio \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install newer CMake
+RUN wget -q https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-linux-x86_64.tar.gz && \
+    tar xzf cmake-3.28.1-linux-x86_64.tar.gz -C /usr/local --strip-components=1 && \
+    rm cmake-3.28.1-linux-x86_64.tar.gz
+
+WORKDIR /osxcross
+
+# Note: You must provide MacOSX SDK separately
+# Download from: https://github.com/joseluisq/macosx-sdks
+# Place MacOSX14.0.sdk.tar.xz in docker/sdk/ directory before building
+
+COPY docker/sdk/*.tar.xz /osxcross/tarballs/ 2>/dev/null || echo "No SDK found - build will fail"
+
+# Build OSXCross
+RUN git clone https://github.com/tpoechtrager/osxcross.git /osxcross-build && \
+    cd /osxcross-build && \
+    UNATTENDED=1 ./build.sh && \
+    cp -r /osxcross-build/target /osxcross/
+
+ENV PATH="/osxcross/target/bin:$PATH"
+ENV OSXCROSS_MP_INC=1
+
+WORKDIR /build
+
+# Copy source
+COPY . /build/
+
+# Build for macOS ARM64
+RUN mkdir -p build-arm64 && cd build-arm64 && \
+    cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_STANDARD=20 \
+    -DCMAKE_SYSTEM_NAME=Darwin \
+    -DCMAKE_C_COMPILER=aarch64-apple-darwin23-clang \
+    -DCMAKE_CXX_COMPILER=aarch64-apple-darwin23-clang++ \
+    -DCMAKE_OSX_ARCHITECTURES=arm64 \
+    .. && \
+    make -j$(nproc)
+
+# Build for macOS x86_64
+RUN mkdir -p build-x64 && cd build-x64 && \
+    cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_STANDARD=20 \
+    -DCMAKE_SYSTEM_NAME=Darwin \
+    -DCMAKE_C_COMPILER=x86_64-apple-darwin23-clang \
+    -DCMAKE_CXX_COMPILER=x86_64-apple-darwin23-clang++ \
+    -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+    .. && \
+    make -j$(nproc)
+
+# Create release packages
+RUN mkdir -p /output && \
+    cp build-arm64/binsort /output/binsort-arm64 && \
+    cp build-x64/binsort /output/binsort-x64 && \
+    cp README.md LICENSE /output/ && \
+    cd /output && \
+    tar czf binsort-macos-arm64.tar.gz binsort-arm64 README.md LICENSE && \
+    tar czf binsort-macos-x64.tar.gz binsort-x64 README.md LICENSE
+
+CMD ["cp", "-r", "/output/.", "/artifacts/"]

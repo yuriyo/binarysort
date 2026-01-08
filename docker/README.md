@@ -13,6 +13,11 @@ This directory contains Dockerfiles for building BinarySort on different platfor
    - Cross-compiled on Linux using MinGW-w64
    - Produces native Windows executables
 
+3. **macOS (ARM64 & x86_64)** - `Dockerfile.macos-cross`
+   - Cross-compiled using OSXCross
+   - **Requires macOS SDK** (not included due to licensing)
+   - Produces both ARM64 and Intel binaries
+
 ## Building with Docker
 
 ### Build All Platforms
@@ -33,14 +38,32 @@ dockerbuild.bat all
 
 # Windows only
 ./dockerbuild.sh windows
+
+# macOS only (requires SDK setup - see below)
+./dockerbuild.sh macos
 ```
 
 ### Output
 
-All build artifacts are placed in the `release/` directory:
-- `binsort-linux-x64.tar.gz`
-- `binsort-windows-amd64.zip`
+- `binsort-macos-arm64.tar.gz` (if macOS cross-compile is used)
+- `binsort-macos-x64.tar.gz` (if macOS cross-compile is used)
 
+## macOS Cross-Compilation Setup
+
+macOS cross-compilation requires the macOS SDK, which cannot be redistributed due to Apple's licensing.
+
+### Option 1: OSXCross (Docker)
+
+1. Download macOS SDK from [joseluisq/macosx-sdks](https://github.com/joseluisq/macosx-sdks/releases)
+2. Create `docker/sdk/` directory
+3. Place `MacOSX14.0.sdk.tar.xz` (or similar) in `docker/sdk/`
+4. Run: `./dockerbuild.sh macos`
+
+**Note**: You must have legal rights to use the macOS SDK (e.g., Xcode license agreement).
+
+### Option 2: Native Build (Recommended)
+
+For production builds, use native macOS machines or GitHub Actions
 ## macOS Builds
 
 macOS builds cannot be easily done in Docker due to licensing restrictions. Use the native build:
