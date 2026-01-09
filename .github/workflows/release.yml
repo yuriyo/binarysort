@@ -53,79 +53,62 @@ jobs:
           name: binsort-windows-amd64
           path: release/binsort-windows-amd64.zip
 
-  build-macos-arm64:
-    name: Build macOS (ARM64)
-    runs-on: macos-14  # macOS ARM64 runner
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # macOS builds temporarily disabled - build locally or use Docker
+  # build-macos-arm64:
+  #   name: Build macOS (ARM64)
+  #   runs-on: macos-14
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #     - name: Install dependencies
+  #       run: brew install cmake ninja
+  #     - name: Build
+  #       run: |
+  #         mkdir build && cd build
+  #         cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=20 -DCMAKE_OSX_ARCHITECTURES=arm64 ..
+  #         ninja
+  #     - name: Package
+  #       run: |
+  #         mkdir -p release
+  #         cp build/binsort release/
+  #         cp README.md LICENSE release/
+  #         cd release
+  #         tar czf binsort-macos-arm64.tar.gz binsort README.md LICENSE
+  #     - name: Upload macOS ARM64 artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: binsort-macos-arm64
+  #         path: release/binsort-macos-arm64.tar.gz
 
-      - name: Install dependencies
-        run: |
-          brew install cmake ninja
-
-      - name: Build
-        run: |
-          mkdir build && cd build
-          cmake -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_STANDARD=20 \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            ..
-          ninja
-
-      - name: Package
-        run: |
-          mkdir -p release
-          cp build/binsort release/
-          cp README.md LICENSE release/
-          cd release
-          tar czf binsort-macos-arm64.tar.gz binsort README.md LICENSE
-
-      - name: Upload macOS ARM64 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: binsort-macos-arm64
-          path: release/binsort-macos-arm64.tar.gz
-
-  build-macos-x64:
-    name: Build macOS (x86_64)
-    runs-on: macos-15-large  # macOS x86_64 runner
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          brew install cmake ninja
-
-      - name: Build
-        run: |
-          mkdir build && cd build
-          cmake -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_STANDARD=20 \
-            -DCMAKE_OSX_ARCHITECTURES=x86_64 \
-            ..
-          ninja
-
-      - name: Package
-        run: |
-          mkdir -p release
-          cp build/binsort release/
-          cp README.md LICENSE release/
-          cd release
-          tar czf binsort-macos-x64.tar.gz binsort README.md LICENSE
-
-      - name: Upload macOS x64 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: binsort-macos-x64
-          path: release/binsort-macos-x64.tar.gz
+  # build-macos-x64:
+  #   name: Build macOS (x86_64)
+  #   runs-on: macos-15-large
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #     - name: Install dependencies
+  #       run: brew install cmake ninja
+  #     - name: Build
+  #       run: |
+  #         mkdir build && cd build
+  #         cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=20 -DCMAKE_OSX_ARCHITECTURES=x86_64 ..
+  #         ninja
+  #     - name: Package
+  #       run: |
+  #         mkdir -p release
+  #         cp build/binsort release/
+  #         cp README.md LICENSE release/
+  #         cd release
+  #         tar czf binsort-macos-x64.tar.gz binsort README.md LICENSE
+  #     - name: Upload macOS x64 artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: binsort-macos-x64
+  #         path: release/binsort-macos-x64.tar.gz
 
   create-release:
     name: Create Release
-    needs: [build-linux, build-windows, build-macos-arm64, build-macos-x64]
+    needs: [build-linux, build-windows]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -141,8 +124,6 @@ jobs:
           mkdir -p release-assets
           cp artifacts/binsort-linux-x64/binsort-linux-x64.tar.gz release-assets/
           cp artifacts/binsort-windows-amd64/binsort-windows-amd64.zip release-assets/
-          cp artifacts/binsort-macos-arm64/binsort-macos-arm64.tar.gz release-assets/
-          cp artifacts/binsort-macos-x64/binsort-macos-x64.tar.gz release-assets/
           
           # Copy documentation
           cp README.md release-assets/
@@ -184,8 +165,7 @@ jobs:
           ### macOS
           - **binsort-macos-arm64.tar.gz** - Apple Silicon (M1/M2/M3)
           - **binsort-macos-x64.tar.gz** - Intel (x86_64)
-          
-          ## 📚 Documentation
+          Build macOS binaries locally or use Docker (see [docker/README.md](docker/README.md)
           - README.md - User guide and examples
           - TEST_REPORT.md - Test results and validation
           - PERFORMANCE_50M.md - Large-scale performance benchmarks
