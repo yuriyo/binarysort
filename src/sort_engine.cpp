@@ -4,6 +4,7 @@
 #include <vector>
 #include <thread>
 #include <cstring>
+#include <span>
 
 namespace binsort {
 
@@ -31,22 +32,30 @@ SortEngine::~SortEngine() {
     }
 }
 
-void SortEngine::swap_records(uint8_t* a, uint8_t* b) const {
-    // Use temporary buffer for swap
-    uint8_t temp[256];
-    const size_t len = config_.record_length;
-    
-    if (len <= sizeof(temp)) {
-        std::memcpy(temp, a, len);
-        std::memcpy(a, b, len);
-        std::memcpy(b, temp, len);
-    } else {
-        // For larger records, allocate dynamically
-        std::vector<uint8_t> temp_vec(len);
-        std::memcpy(temp_vec.data(), a, len);
-        std::memcpy(a, b, len);
-        std::memcpy(b, temp_vec.data(), len);
+namespace {
+    // Generic optimal swap using std::span and stack buffer for small records
+    inline void swap_records_optimal(std::span<uint8_t> a, std::span<uint8_t> b) {
+        constexpr size_t STACK_BUFFER_SIZE = 256;
+        const size_t len = a.size();
+        
+        if (len <= STACK_BUFFER_SIZE) {
+            // Fast path: use stack buffer
+            uint8_t temp[STACK_BUFFER_SIZE];
+            std::memcpy(temp, a.data(), len);
+            std::memcpy(a.data(), b.data(), len);
+            std::memcpy(b.data(), temp, len);
+        } else {
+            // For larger records, use swap_ranges which is optimized by STL
+            std::swap_ranges(a.begin(), a.end(), b.begin());
+        }
     }
+}
+
+void SortEngine::swap_records(uint8_t* a, uint8_t* b) const {
+    swap_records_optimal(
+        std::span<uint8_t>(a, config_.record_length),
+        std::span<uint8_t>(b, config_.record_length)
+    );
 }
 
 void SortEngine::sort(uint8_t* data, size_t record_count) {
@@ -188,18 +197,10 @@ int64_t RecordQuickSort::partition(uint8_t* data, int64_t low, int64_t high) {
 }
 
 void RecordQuickSort::swap_records(uint8_t* a, uint8_t* b) {
-    uint8_t temp[256];
-    
-    if (record_length_ <= sizeof(temp)) {
-        std::memcpy(temp, a, record_length_);
-        std::memcpy(a, b, record_length_);
-        std::memcpy(b, temp, record_length_);
-    } else {
-        std::vector<uint8_t> temp_vec(record_length_);
-        std::memcpy(temp_vec.data(), a, record_length_);
-        std::memcpy(a, b, record_length_);
-        std::memcpy(b, temp_vec.data(), record_length_);
-    }
+    swap_records_optimal(
+        std::span<uint8_t>(a, record_length_),
+        std::span<uint8_t>(b, record_length_)
+    );
 }
 
 } // namespace binsort
