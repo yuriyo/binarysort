@@ -90,7 +90,7 @@ jobs:
 
   build-macos-x64:
     name: Build macOS (x86_64)
-    runs-on: macos-13  # macOS x86_64 runner
+    runs-on: macos-15-large  # macOS x86_64 runner
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
