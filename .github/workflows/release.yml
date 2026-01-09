@@ -149,6 +149,10 @@ jobs:
           cp LICENSE release-assets/
           cp TEST_REPORT.md release-assets/ || true
           cp PERFORMANCE_50M.md release-assets/ || true
+          
+          # List files for verification
+          echo "Release assets:"
+          ls -lh release-assets/
 
       - name: Extract version from tag
         id: get_version
@@ -199,21 +203,15 @@ jobs:
           ./binsort input.dat output.dat / sort(1,4,w,a) record(16) thread_count(4)
           \`\`\`
           
-          See README.md for detailed usage instructions.
-          EOF
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+          See README.md for detailed usage 2
         with:
           name: Binary Sort v${{ steps.get_version.outputs.VERSION }}
           body_path: release-notes.md
           files: |
-            release-assets/binsort-linux-x64.tar.gz
-            release-assets/binsort-windows-amd64.zip
-            release-assets/binsort-macos-arm64.tar.gz
-            release-assets/binsort-macos-x64.tar.gz
-            release-assets/README.md
-            release-assets/LICENSE
+            release-assets/*
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: tru/LICENSE
             release-assets/TEST_REPORT.md
             release-assets/PERFORMANCE_50M.md
           draft: false
