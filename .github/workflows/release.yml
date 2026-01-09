@@ -203,7 +203,11 @@ jobs:
           ./binsort input.dat output.dat / sort(1,4,w,a) record(16) thread_count(4)
           \`\`\`
           
-          See README.md for detailed usage 2
+          See README.md for detailed usage instructions.
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
           name: Binary Sort v${{ steps.get_version.outputs.VERSION }}
           body_path: release-notes.md
@@ -211,10 +215,6 @@ jobs:
             release-assets/*
           draft: false
           prerelease: false
-          fail_on_unmatched_files: tru/LICENSE
-            release-assets/TEST_REPORT.md
-            release-assets/PERFORMANCE_50M.md
-          draft: false
-          prerelease: false
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
